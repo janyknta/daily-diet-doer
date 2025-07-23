@@ -4,8 +4,8 @@ const thursdayMeals: Meal[] = [
   {
     day: 4,
     time: '6:00',
-    name: 'Morning Soaked Combo',
-    foods: ['2 Kimia dates', '6 almonds', '2 walnuts', '1 Brazil nut', '8 black raisins', '1 tsp chia', '1 banana'],
+    name: 'Morning Soaked Combo (Pre-Workout)',
+    foods: ['Soaked: 2 Kimia dates + 6 almonds + 2 walnuts + 1 Brazil nut + 8 black raisins + 1 tsp chia in water + 1 banana'],
     calories: 320,
     protein: 6,
     carbs: 45,
@@ -15,51 +15,61 @@ const thursdayMeals: Meal[] = [
     day: 4,
     time: '7:30',
     name: 'Post-Workout Breakfast',
-    foods: ['Protein pancakes (2)', 'Greek yogurt (150g)', 'Honey (1 tsp)', 'Berries'],
-    calories: 520,
-    protein: 32,
-    carbs: 48,
-    fats: 16
+    foods: ['Sattu shake (250ml milk + sattu 25g + jaggery 1 tsp + cinnamon)', '3 boiled eggs', 'Greek yogurt (200g)'],
+    calories: 850,
+    protein: 50,
+    carbs: 75,
+    fats: 32
   },
   {
     day: 4,
     time: '11:00',
-    name: 'Mid-Morning Snack',
-    foods: ['Green tea', 'Banana', 'Peanut butter (1 tbsp)'],
+    name: 'Mid-Morning Snack (Micronutrient Booster)',
+    foods: ['Chia pudding (milk 150ml + chia 2 tsp + soaked figs 2 + pomegranate 50g)'],
     calories: 220,
     protein: 6,
-    carbs: 28,
-    fats: 10
+    carbs: 30,
+    fats: 8
   },
   {
     day: 4,
-    time: '13:00',
-    name: 'Lunch',
-    foods: ['Quinoa salad', 'Grilled vegetables', 'Chickpeas (100g)', 'Tahini dressing'],
-    calories: 480,
-    protein: 20,
-    carbs: 55,
-    fats: 18
+    time: '13:30',
+    name: 'Lunch (Main Protein + Whole Grains + Greens)',
+    foods: ['Rajma curry (200g cooked)', 'Brown rice (1.5 cups)', 'Cucumber-carrot salad', '6 soaked almonds'],
+    calories: 1050,
+    protein: 45,
+    carbs: 130,
+    fats: 17
   },
   {
     day: 4,
-    time: '16:00',
-    name: 'Evening Snack',
-    foods: ['Herbal tea', 'Apple slices', 'Almonds (12)'],
-    calories: 180,
-    protein: 5,
-    carbs: 18,
-    fats: 12
+    time: '16:30',
+    name: 'Evening Snack (Energy + Antioxidants)',
+    foods: ['Boiled Bengal gram', 'Groundnuts (repeat snack from 11 AM)'],
+    calories: 280,
+    protein: 13,
+    carbs: 35,
+    fats: 8
   },
   {
     day: 4,
     time: '19:30',
-    name: 'Dinner',
-    foods: ['Baked salmon (150g)', 'Brown rice (100g)', 'Steamed broccoli', 'Lemon salad'],
-    calories: 550,
-    protein: 40,
-    carbs: 38,
-    fats: 22
+    name: 'Dinner (Light, Protein-Rich)',
+    foods: ['Sweet potato (200g boiled)', 'Peanut butter (1 tsp)', 'Greek yogurt (150g)'],
+    calories: 400,
+    protein: 12,
+    carbs: 60,
+    fats: 9
+  },
+  {
+    day: 4,
+    time: '21:30',
+    name: 'Night Recovery Snack',
+    foods: ['Cottage cheese (50g)', 'Walnuts (2 halves)', 'Honey (1 tsp)'],
+    calories: 160,
+    protein: 10,
+    carbs: 8,
+    fats: 7
   }
 ];
 

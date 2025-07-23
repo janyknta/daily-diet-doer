@@ -4,8 +4,8 @@ const mondayMeals: Meal[] = [
   {
     day: 1,
     time: '6:00',
-    name: 'Morning Soaked Combo',
-    foods: ['2 Kimia dates', '6 almonds', '2 walnuts', '1 Brazil nut', '8 black raisins', '1 tsp chia', '1 banana'],
+    name: 'Morning Soaked Combo (Pre-Workout)',
+    foods: ['Soaked: 2 Kimia dates + 6 almonds + 2 walnuts + 1 Brazil nut + 8 black raisins + 1 tsp chia in water + 1 banana'],
     calories: 320,
     protein: 6,
     carbs: 45,
@@ -15,7 +15,7 @@ const mondayMeals: Meal[] = [
     day: 1,
     time: '7:30',
     name: 'Post-Workout Breakfast',
-    foods: ['Sattu shake (250ml milk + 25g sattu + jaggery + cinnamon)', '3 boiled eggs', 'Greek yogurt (200g)'],
+    foods: ['Sattu shake (250ml milk + sattu 25g + jaggery 1 tsp + cinnamon)', '3 boiled eggs', 'Greek yogurt (200g)'],
     calories: 850,
     protein: 50,
     carbs: 75,
@@ -24,42 +24,52 @@ const mondayMeals: Meal[] = [
   {
     day: 1,
     time: '11:00',
-    name: 'Mid-Morning Snack',
-    foods: ['Protein smoothie', 'Handful of berries', '1 tsp honey'],
-    calories: 200,
-    protein: 8,
-    carbs: 28,
-    fats: 6
-  },
-  {
-    day: 1,
-    time: '13:00',
-    name: 'Lunch',
-    foods: ['Brown rice (150g)', 'Lentil curry', 'Spinach sabzi', 'Cucumber salad'],
-    calories: 420,
-    protein: 16,
-    carbs: 62,
-    fats: 10
-  },
-  {
-    day: 1,
-    time: '16:00',
-    name: 'Evening Snack',
-    foods: ['Herbal tea', '1 orange', 'Roasted chickpeas (30g)'],
-    calories: 160,
+    name: 'Mid-Morning Snack (Micronutrient Booster)',
+    foods: ['Chia pudding (milk 150ml + chia 2 tsp + soaked figs 2 + pomegranate 50g)'],
+    calories: 220,
     protein: 6,
-    carbs: 28,
-    fats: 3
+    carbs: 30,
+    fats: 8
+  },
+  {
+    day: 1,
+    time: '13:30',
+    name: 'Lunch (Main Protein + Whole Grains + Greens)',
+    foods: ['Chicken breast (200g)', 'Spinach salad (spinach 100g, cucumber, tomato, EVOO 1 tsp)', 'Brown rice (1.5 cups)', 'Dal (1 cup)'],
+    calories: 1100,
+    protein: 70,
+    carbs: 120,
+    fats: 20
+  },
+  {
+    day: 1,
+    time: '16:30',
+    name: 'Evening Snack (Energy + Antioxidants)',
+    foods: ['Peanut butter (1 tbsp)', 'Banana', 'Sunflower seeds (1 tbsp)'],
+    calories: 200,
+    protein: 6,
+    carbs: 25,
+    fats: 9
   },
   {
     day: 1,
     time: '19:30',
-    name: 'Dinner',
-    foods: ['Grilled fish (150g)', 'Sweet potato (100g)', 'Green beans', 'Mixed salad'],
-    calories: 480,
-    protein: 35,
-    carbs: 32,
-    fats: 18
+    name: 'Dinner (Light, Protein-Rich)',
+    foods: ['Ragi porridge (ragi flour 50g + milk 250ml + jaggery 1 tsp)', 'Avocado salad'],
+    calories: 350,
+    protein: 10,
+    carbs: 50,
+    fats: 10
+  },
+  {
+    day: 1,
+    time: '21:30',
+    name: 'Night Recovery Snack',
+    foods: ['Warm turmeric milk (200ml milk + turmeric + black pepper)', 'Soaked almonds (4)'],
+    calories: 180,
+    protein: 7,
+    carbs: 10,
+    fats: 8
   }
 ];
 
