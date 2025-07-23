@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, CheckCircle } from "lucide-react";
 import { getTaskCompletionPercentage, getCompletionColor, getTasksForDay, getDayName } from "@/lib/plannerData";
 import { cn } from "@/lib/utils";
+import { getTaskCompletion } from "@/lib/storage";
 
 const CalendarView = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -16,22 +17,30 @@ const CalendarView = () => {
   const modifiers = {
     completed: (date: Date) => {
       const dayOfWeek = getDayOfWeek(date);
-      const percentage = getTaskCompletionPercentage(dayOfWeek);
+      const tasks = getTasksForDay(dayOfWeek);
+      const completedTasks = tasks.filter(task => getTaskCompletion(task.id)).length;
+      const percentage = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
       return percentage === 100;
     },
     mostlyCompleted: (date: Date) => {
       const dayOfWeek = getDayOfWeek(date);
-      const percentage = getTaskCompletionPercentage(dayOfWeek);
+      const tasks = getTasksForDay(dayOfWeek);
+      const completedTasks = tasks.filter(task => getTaskCompletion(task.id)).length;
+      const percentage = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
       return percentage >= 80 && percentage < 100;
     },
     partiallyCompleted: (date: Date) => {
       const dayOfWeek = getDayOfWeek(date);
-      const percentage = getTaskCompletionPercentage(dayOfWeek);
+      const tasks = getTasksForDay(dayOfWeek);
+      const completedTasks = tasks.filter(task => getTaskCompletion(task.id)).length;
+      const percentage = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
       return percentage > 0 && percentage < 80;
     },
     notStarted: (date: Date) => {
       const dayOfWeek = getDayOfWeek(date);
-      const percentage = getTaskCompletionPercentage(dayOfWeek);
+      const tasks = getTasksForDay(dayOfWeek);
+      const completedTasks = tasks.filter(task => getTaskCompletion(task.id)).length;
+      const percentage = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
       return percentage === 0;
     }
   };
@@ -45,7 +54,8 @@ const CalendarView = () => {
 
   const selectedDayOfWeek = selectedDate ? getDayOfWeek(selectedDate) : 0;
   const selectedDayTasks = getTasksForDay(selectedDayOfWeek);
-  const completionPercentage = getTaskCompletionPercentage(selectedDayOfWeek);
+  const completedTasksCount = selectedDayTasks.filter(task => getTaskCompletion(task.id)).length;
+  const completionPercentage = selectedDayTasks.length > 0 ? Math.round((completedTasksCount / selectedDayTasks.length) * 100) : 0;
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
@@ -132,13 +142,13 @@ const CalendarView = () => {
                 <div className="flex justify-between text-sm">
                   <span>Completed:</span>
                   <span className="font-medium text-success">
-                    {selectedDayTasks.filter(task => task.completed).length}
+                    {completedTasksCount}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Remaining:</span>
                   <span className="font-medium text-destructive">
-                    {selectedDayTasks.filter(task => !task.completed).length}
+                    {selectedDayTasks.length - completedTasksCount}
                   </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2 mt-4">
@@ -163,7 +173,7 @@ const CalendarView = () => {
               <div className="space-y-2">
                 {['meal', 'work', 'exercise', 'learning', 'chore', 'prep', 'shopping', 'personal'].map(type => {
                   const typeTasks = selectedDayTasks.filter(task => task.type === type);
-                  const completed = typeTasks.filter(task => task.completed).length;
+                  const completed = typeTasks.filter(task => getTaskCompletion(task.id)).length;
                   
                   if (typeTasks.length === 0) return null;
                   

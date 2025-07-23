@@ -610,7 +610,9 @@ export const getTaskCompletionPercentage = (day: number): number => {
   const tasksForDay = getTasksForDay(day);
   if (tasksForDay.length === 0) return 0;
   
-  const completedTasks = tasksForDay.filter(task => task.completed).length;
+  // Import storage functions
+  const { getTaskCompletion } = require('./storage');
+  const completedTasks = tasksForDay.filter(task => getTaskCompletion(task.id)).length;
   return Math.round((completedTasks / tasksForDay.length) * 100);
 };
 

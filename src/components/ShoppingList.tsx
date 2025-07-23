@@ -3,7 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShoppingCart, Calendar, Clock, Plus } from "lucide-react";
+import { ShoppingCart, Calendar, Clock, Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ShoppingItem {
   id: string;
@@ -18,6 +22,7 @@ interface ShoppingItem {
 
 const ShoppingList = () => {
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>([
+    // ... existing items
     {
       id: '1',
       name: 'Chicken breast',
@@ -79,6 +84,15 @@ const ShoppingList = () => {
       completed: false
     }
   ]);
+  const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [newItem, setNewItem] = useState({
+    name: '',
+    quantity: '',
+    category: 'Protein',
+    urgency: 'medium' as 'high' | 'medium' | 'low',
+    suggestedTime: '',
+    forMeal: ''
+  });
 
   const toggleItem = (itemId: string) => {
     setShoppingItems(items => 
@@ -86,6 +100,31 @@ const ShoppingList = () => {
         item.id === itemId ? { ...item, completed: !item.completed } : item
       )
     );
+  };
+
+  const addItem = () => {
+    if (!newItem.name || !newItem.quantity) return;
+
+    const item: ShoppingItem = {
+      id: `custom-${Date.now()}`,
+      ...newItem,
+      completed: false
+    };
+
+    setShoppingItems([...shoppingItems, item]);
+    setNewItem({
+      name: '',
+      quantity: '',
+      category: 'Protein',
+      urgency: 'medium',
+      suggestedTime: '',
+      forMeal: ''
+    });
+    setIsAddItemOpen(false);
+  };
+
+  const deleteItem = (itemId: string) => {
+    setShoppingItems(shoppingItems.filter(item => item.id !== itemId));
   };
 
   const getUrgencyColor = (urgency: string) => {
@@ -139,9 +178,101 @@ const ShoppingList = () => {
                   <CardTitle className="flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5 text-primary" />
                     {urgency.charAt(0).toUpperCase() + urgency.slice(1)} Priority
-                    <Badge className={getUrgencyColor(urgency)}>
-                      {items.filter(item => !item.completed).length} items
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className={getUrgencyColor(urgency)}>
+                        {items.filter(item => !item.completed).length} items
+                      </Badge>
+                      {urgency === 'high' && (
+                        <Dialog open={isAddItemOpen} onOpenChange={setIsAddItemOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" className="gap-1">
+                              <Plus className="h-3 w-3" />
+                              Add Item
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Add Shopping Item</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label htmlFor="name">Item Name</Label>
+                                  <Input
+                                    id="name"
+                                    value={newItem.name}
+                                    onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                                    placeholder="Item name"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="quantity">Quantity</Label>
+                                  <Input
+                                    id="quantity"
+                                    value={newItem.quantity}
+                                    onChange={(e) => setNewItem({...newItem, quantity: e.target.value})}
+                                    placeholder="e.g., 200g, 5 pieces"
+                                  />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label htmlFor="category">Category</Label>
+                                  <Select value={newItem.category} onValueChange={(value) => setNewItem({...newItem, category: value})}>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Protein">Protein</SelectItem>
+                                      <SelectItem value="Dairy">Dairy</SelectItem>
+                                      <SelectItem value="Vegetables">Vegetables</SelectItem>
+                                      <SelectItem value="Grains">Grains</SelectItem>
+                                      <SelectItem value="Nuts">Nuts</SelectItem>
+                                      <SelectItem value="Fruits">Fruits</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label htmlFor="urgency">Priority</Label>
+                                  <Select value={newItem.urgency} onValueChange={(value: 'high' | 'medium' | 'low') => setNewItem({...newItem, urgency: value})}>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="high">High</SelectItem>
+                                      <SelectItem value="medium">Medium</SelectItem>
+                                      <SelectItem value="low">Low</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              <div>
+                                <Label htmlFor="suggestedTime">Suggested Time</Label>
+                                <Input
+                                  id="suggestedTime"
+                                  value={newItem.suggestedTime}
+                                  onChange={(e) => setNewItem({...newItem, suggestedTime: e.target.value})}
+                                  placeholder="e.g., Today 8:15 AM"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="forMeal">For Meal (optional)</Label>
+                                <Input
+                                  id="forMeal"
+                                  value={newItem.forMeal}
+                                  onChange={(e) => setNewItem({...newItem, forMeal: e.target.value})}
+                                  placeholder="e.g., Breakfast, Lunch"
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button onClick={addItem} className="flex-1">Add Item</Button>
+                                <Button variant="outline" onClick={() => setIsAddItemOpen(false)} className="flex-1">Cancel</Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -180,6 +311,17 @@ const ShoppingList = () => {
                           )}
                         </div>
                       </div>
+                      
+                      {item.id.startsWith('custom-') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteItem(item.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </CardContent>

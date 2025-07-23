@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, Plus, Trash2, Clock, Save } from "lucide-react";
 import { Task, weeklyTasks, getDayName } from "@/lib/plannerData";
 import { useToast } from "@/hooks/use-toast";
+import { clearStorageData, getStorageStats } from "@/lib/storage";
 
 interface NewTask {
   time: string;
@@ -22,6 +23,7 @@ interface NewTask {
 const SettingsView = () => {
   const { toast } = useToast();
   const [customTasks, setCustomTasks] = useState<Task[]>([]);
+  const [storageStats, setStorageStats] = useState(getStorageStats());
   const [newTask, setNewTask] = useState<NewTask>({
     time: '',
     title: '',
@@ -31,6 +33,24 @@ const SettingsView = () => {
     reminder: false
   });
   const [isAddingTask, setIsAddingTask] = useState(false);
+
+  const refreshStorageStats = () => {
+    setStorageStats(getStorageStats());
+  };
+
+  const handleClearStorage = (daysToKeep?: number) => {
+    clearStorageData(daysToKeep);
+    refreshStorageStats();
+    
+    const message = daysToKeep 
+      ? `Cleared data older than ${daysToKeep} days`
+      : 'All progress data cleared';
+      
+    toast({
+      title: "Storage Cleared",
+      description: message,
+    });
+  };
 
   const taskTypes = [
     { value: 'meal', label: 'Meal', color: 'bg-primary' },
@@ -263,6 +283,73 @@ const SettingsView = () => {
         )}
 
         {/* General Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Data Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h4 className="font-medium mb-2">Storage Statistics</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Total Tasks Tracked:</span>
+                  <span className="font-medium ml-2">{storageStats.totalTasks}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Completed Tasks:</span>
+                  <span className="font-medium ml-2">{storageStats.completedTasks}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">Last Updated:</span>
+                  <span className="font-medium ml-2">
+                    {new Date(storageStats.lastUpdated).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-base font-medium">Clear Progress Data</Label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Remove task completion data from local storage
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleClearStorage(7)}
+                >
+                  Clear Last 7 Days
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleClearStorage(30)}
+                >
+                  Clear Last 30 Days
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => handleClearStorage()}
+                >
+                  Clear All Data
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={refreshStorageStats}
+                >
+                  Refresh Stats
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

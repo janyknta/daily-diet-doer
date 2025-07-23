@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle, ShoppingCart, Bell, Utensils, RefreshCw } from "lucide-react";
+import { Clock, CheckCircle, ShoppingCart, Bell, Utensils, RefreshCw, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Task, 
   Meal, 
@@ -14,11 +19,21 @@ import {
   getDayName,
   getTaskCompletionPercentage 
 } from "@/lib/plannerData";
+import { saveTaskProgress, getTaskCompletion } from "@/lib/storage";
 
 const DailyPlanner = () => {
   const [currentDate, setCurrentDate] = useState(getCurrentDate());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [todaysMeals, setTodaysMeals] = useState<Meal[]>([]);
+  const [expandedMeals, setExpandedMeals] = useState<Set<number>>(new Set());
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    time: '',
+    title: '',
+    description: '',
+    type: 'personal' as Task['type'],
+    reminder: false
+  });
 
   const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
@@ -27,7 +42,13 @@ const DailyPlanner = () => {
     const dayTasks = getTasksForDay(currentDay);
     const dayMeals = getMealsForDay(currentDay);
     
-    setTasks(dayTasks);
+    // Load tasks with their completion status from storage
+    const tasksWithCompletion = dayTasks.map(task => ({
+      ...task,
+      completed: getTaskCompletion(task.id)
+    }));
+    
+    setTasks(tasksWithCompletion);
     setTodaysMeals(dayMeals);
   }, [currentDay]);
 
@@ -37,9 +58,52 @@ const DailyPlanner = () => {
   };
 
   const toggleTask = (taskId: string) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    ));
+    const updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        const newCompleted = !task.completed;
+        saveTaskProgress(taskId, newCompleted);
+        return { ...task, completed: newCompleted };
+      }
+      return task;
+    });
+    setTasks(updatedTasks);
+  };
+
+  const addTask = () => {
+    if (!newTask.time || !newTask.title) return;
+
+    const task: Task = {
+      id: `custom-${Date.now()}`,
+      day: currentDay,
+      ...newTask,
+      completed: false
+    };
+
+    setTasks([...tasks, task]);
+    setNewTask({
+      time: '',
+      title: '',
+      description: '',
+      type: 'personal',
+      reminder: false
+    });
+    setIsAddTaskOpen(false);
+  };
+
+  const deleteTask = (taskId: string) => {
+    setTasks(tasks.filter(task => task.id !== taskId));
+    // Also remove from storage
+    saveTaskProgress(taskId, false);
+  };
+
+  const toggleMealExpansion = (mealIndex: number) => {
+    const newExpanded = new Set(expandedMeals);
+    if (newExpanded.has(mealIndex)) {
+      newExpanded.delete(mealIndex);
+    } else {
+      newExpanded.add(mealIndex);
+    }
+    setExpandedMeals(newExpanded);
   };
 
   const getTypeColor = (type: string) => {
@@ -118,9 +182,86 @@ const DailyPlanner = () => {
                   <Clock className="h-5 w-5 text-primary" />
                   {getDayName(currentDay)}'s Schedule
                 </div>
-                <Badge variant="outline" className="text-sm">
-                  {tasks.length} tasks
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-sm">
+                    {tasks.length} tasks
+                  </Badge>
+                  <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="gap-1">
+                        <Plus className="h-3 w-3" />
+                        Add Task
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Task</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="time">Time</Label>
+                            <Input
+                              id="time"
+                              type="time"
+                              value={newTask.time}
+                              onChange={(e) => setNewTask({...newTask, time: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="type">Type</Label>
+                            <Select value={newTask.type} onValueChange={(value: Task['type']) => setNewTask({...newTask, type: value})}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="meal">Meal</SelectItem>
+                                <SelectItem value="work">Work</SelectItem>
+                                <SelectItem value="prep">Preparation</SelectItem>
+                                <SelectItem value="shopping">Shopping</SelectItem>
+                                <SelectItem value="exercise">Exercise</SelectItem>
+                                <SelectItem value="personal">Personal</SelectItem>
+                                <SelectItem value="chore">Chore</SelectItem>
+                                <SelectItem value="learning">Learning</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="title">Title</Label>
+                          <Input
+                            id="title"
+                            value={newTask.title}
+                            onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                            placeholder="Task title"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea
+                            id="description"
+                            value={newTask.description}
+                            onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                            placeholder="Task description"
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="reminder"
+                            checked={newTask.reminder}
+                            onChange={(e) => setNewTask({...newTask, reminder: e.target.checked})}
+                          />
+                          <Label htmlFor="reminder">Set reminder</Label>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={addTask} className="flex-1">Add Task</Button>
+                          <Button variant="outline" onClick={() => setIsAddTaskOpen(false)} className="flex-1">Cancel</Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -162,6 +303,17 @@ const DailyPlanner = () => {
                     </h4>
                     <p className="text-sm text-muted-foreground">{task.description}</p>
                   </div>
+
+                  {task.id.startsWith('custom-') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteTask(task.id)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -190,14 +342,42 @@ const DailyPlanner = () => {
                     <Badge variant="outline">{meal.calories} kcal</Badge>
                   </div>
                   <h4 className="font-medium mb-2">{meal.name}</h4>
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    {meal.foods.slice(0, 2).map((food, i) => (
-                      <li key={i}>• {food}</li>
-                    ))}
-                    {meal.foods.length > 2 && (
-                      <li>... +{meal.foods.length - 2} more</li>
+                  
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    {expandedMeals.has(index) ? (
+                      <ul className="space-y-1">
+                        {meal.foods.map((food, i) => (
+                          <li key={i}>• {food}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <ul className="space-y-1">
+                        {meal.foods.slice(0, 2).map((food, i) => (
+                          <li key={i}>• {food}</li>
+                        ))}
+                      </ul>
                     )}
-                  </ul>
+                    
+                    {meal.foods.length > 2 && (
+                      <button
+                        onClick={() => toggleMealExpansion(index)}
+                        className="flex items-center gap-1 text-primary hover:text-primary/80 mt-2"
+                      >
+                        {expandedMeals.has(index) ? (
+                          <>
+                            <ChevronUp className="h-3 w-3" />
+                            Show less
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-3 w-3" />
+                            +{meal.foods.length - 2} more
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  
                   <div className="flex gap-2 mt-2 text-xs">
                     <span className="px-2 py-1 bg-success/10 text-success rounded">P: {meal.protein}g</span>
                     <span className="px-2 py-1 bg-warning/10 text-warning rounded">C: {meal.carbs}g</span>
