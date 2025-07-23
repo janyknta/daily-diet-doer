@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import DailyPlanner from "@/components/DailyPlanner";
+import MealsView from "@/components/MealsView";
 import ShoppingList from "@/components/ShoppingList";
 import CalendarView from "@/components/CalendarView";
 import SettingsView from "@/components/SettingsView";
@@ -8,21 +9,25 @@ import SettingsView from "@/components/SettingsView";
 const Index = () => {
   const [activeView, setActiveView] = useState('planner');
 
+  // Handle PWA shortcut navigation
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const view = urlParams.get('view');
+    if (view && ['planner', 'meals', 'shopping', 'calendar', 'settings'].includes(view)) {
+      setActiveView(view);
+    }
+  }, []);
+
   const renderActiveView = () => {
     switch (activeView) {
       case 'planner':
         return <DailyPlanner />;
+      case 'meals':
+        return <MealsView />;
       case 'shopping':
         return <ShoppingList />;
       case 'calendar':
         return <CalendarView />;
-      case 'reminders':
-        return (
-          <div className="container mx-auto p-6 max-w-4xl">
-            <h1 className="text-4xl font-bold text-foreground mb-2">Reminders</h1>
-            <p className="text-muted-foreground">Coming soon - Smart reminder system</p>
-          </div>
-        );
       case 'settings':
         return <SettingsView />;
       default:

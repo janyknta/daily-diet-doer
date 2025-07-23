@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, ShoppingCart, Bell, Settings, Menu } from "lucide-react";
+import { Calendar, Clock, ShoppingCart, Bell, Settings, Menu, Utensils } from "lucide-react";
 
 interface NavigationProps {
   activeView: string;
@@ -12,9 +12,9 @@ const Navigation = ({ activeView, onViewChange }: NavigationProps) => {
 
   const navItems = [
     { id: 'planner', label: 'Daily Planner', icon: <Clock className="h-4 w-4" /> },
+    { id: 'meals', label: 'Meals', icon: <Utensils className="h-4 w-4" /> },
     { id: 'calendar', label: 'Calendar', icon: <Calendar className="h-4 w-4" /> },
-    { id: 'shopping', label: 'Shopping Lists', icon: <ShoppingCart className="h-4 w-4" /> },
-    { id: 'reminders', label: 'Reminders', icon: <Bell className="h-4 w-4" /> },
+    { id: 'shopping', label: 'Shopping', icon: <ShoppingCart className="h-4 w-4" /> },
     { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> }
   ];
 

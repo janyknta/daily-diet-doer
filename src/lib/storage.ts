@@ -5,9 +5,20 @@ export interface StorageData {
 
 const STORAGE_KEY = 'daily-diet-doer-data';
 
-// Helper function to format date as YYYY-MM-DD
+// Helper function to format date as YYYY-MM-DD with validation
 const formatDate = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  // Validate the date
+  if (!date || isNaN(date.getTime())) {
+    console.warn('Invalid date provided to formatDate, using current date');
+    date = new Date();
+  }
+  
+  try {
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return new Date().toISOString().split('T')[0];
+  }
 };
 
 // Helper function to create storage key
@@ -15,9 +26,10 @@ const createTaskKey = (taskId: string, date: Date): string => {
   return `${taskId}-${formatDate(date)}`;
 };
 
-export const saveTaskProgress = (taskId: string, completed: boolean, date: Date = new Date()) => {
+export const saveTaskProgress = (taskId: string, completed: boolean, date?: Date) => {
+  const targetDate = date || new Date();
   const existingData = getStorageData();
-  const taskKey = createTaskKey(taskId, date);
+  const taskKey = createTaskKey(taskId, targetDate);
   existingData.tasks[taskKey] = completed;
   existingData.lastUpdated = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(existingData));
@@ -39,9 +51,10 @@ export const getStorageData = (): StorageData => {
   };
 };
 
-export const getTaskCompletion = (taskId: string, date: Date = new Date()): boolean => {
+export const getTaskCompletion = (taskId: string, date?: Date): boolean => {
+  const targetDate = date || new Date();
   const data = getStorageData();
-  const taskKey = createTaskKey(taskId, date);
+  const taskKey = createTaskKey(taskId, targetDate);
   return data.tasks[taskKey] || false;
 };
 
@@ -61,14 +74,22 @@ export const clearStorageData = (daysToKeep?: number) => {
   
   Object.keys(data.tasks).forEach(taskKey => {
     // Extract date from taskKey (format: "taskId-YYYY-MM-DD")
-    const datePart = taskKey.split('-').slice(-3).join('-'); // Get last 3 parts as date
-    try {
-      const taskDate = new Date(datePart);
-      if (taskDate >= cutoffDate) {
+    const parts = taskKey.split('-');
+    if (parts.length >= 3) {
+      // Get the last 3 parts as potential date components
+      const datePart = parts.slice(-3).join('-');
+      try {
+        const taskDate = new Date(datePart);
+        if (!isNaN(taskDate.getTime()) && taskDate >= cutoffDate) {
+          filteredTasks[taskKey] = data.tasks[taskKey];
+        }
+      } catch (error) {
+        // Keep tasks with invalid date format for backward compatibility
+        console.warn('Invalid date format in task key:', taskKey);
         filteredTasks[taskKey] = data.tasks[taskKey];
       }
-    } catch (error) {
-      // Keep tasks with invalid date format for backward compatibility
+    } else {
+      // Keep tasks with old format for backward compatibility
       filteredTasks[taskKey] = data.tasks[taskKey];
     }
   });

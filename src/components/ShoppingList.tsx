@@ -1,89 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShoppingCart, Calendar, Clock, Plus, Trash2 } from "lucide-react";
+import { ShoppingCart, Calendar, Clock, Plus, Trash2, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-interface ShoppingItem {
-  id: string;
-  name: string;
-  quantity: string;
-  category: string;
-  urgency: 'high' | 'medium' | 'low';
-  suggestedTime: string;
-  forMeal?: string;
-  completed: boolean;
-}
+import { generateSmartShoppingList, getShoppingSchedule, type ShoppingItem } from "@/lib/shoppingHelpers";
 
 const ShoppingList = () => {
-  const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>([
-    // ... existing items
-    {
-      id: '1',
-      name: 'Chicken breast',
-      quantity: '200g',
-      category: 'Protein',
-      urgency: 'high',
-      suggestedTime: 'Today 8:15 AM (After gym)',
-      forMeal: 'Lunch',
-      completed: false
-    },
-    {
-      id: '2',
-      name: 'Eggs',
-      quantity: '5 pieces',
-      category: 'Protein',
-      urgency: 'high',
-      suggestedTime: 'Today 8:15 AM (After gym)',
-      forMeal: 'Breakfast',
-      completed: false
-    },
-    {
-      id: '3',
-      name: 'Greek yogurt',
-      quantity: '200g',
-      category: 'Dairy',
-      urgency: 'medium',
-      suggestedTime: 'Tuesday 6:00 PM',
-      forMeal: 'Breakfast',
-      completed: false
-    },
-    {
-      id: '4',
-      name: 'Spinach',
-      quantity: '100g',
-      category: 'Vegetables',
-      urgency: 'medium',
-      suggestedTime: 'Tuesday 6:00 PM',
-      forMeal: 'Lunch salad',
-      completed: false
-    },
-    {
-      id: '5',
-      name: 'Brown rice',
-      quantity: '500g',
-      category: 'Grains',
-      urgency: 'low',
-      suggestedTime: 'Wednesday 6:00 PM',
-      forMeal: 'Weekly supply',
-      completed: false
-    },
-    {
-      id: '6',
-      name: 'Almonds',
-      quantity: '200g',
-      category: 'Nuts',
-      urgency: 'low',
-      suggestedTime: 'Weekend shopping',
-      forMeal: 'Morning combo',
-      completed: false
-    }
-  ]);
+  const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>([]);
+  const [shoppingSchedule, setShoppingSchedule] = useState<Array<{
+    date: string;
+    time: string;
+    description: string;
+    items: string[];
+    urgency: 'high' | 'medium' | 'low';
+  }>>([]);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
@@ -93,6 +28,18 @@ const ShoppingList = () => {
     suggestedTime: '',
     forMeal: ''
   });
+
+  // Load smart shopping list on component mount
+  useEffect(() => {
+    refreshShoppingList();
+  }, []);
+
+  const refreshShoppingList = () => {
+    const smartItems = generateSmartShoppingList();
+    const schedule = getShoppingSchedule();
+    setShoppingItems(smartItems);
+    setShoppingSchedule(schedule);
+  };
 
   const toggleItem = (itemId: string) => {
     setShoppingItems(items => 
@@ -108,7 +55,8 @@ const ShoppingList = () => {
     const item: ShoppingItem = {
       id: `custom-${Date.now()}`,
       ...newItem,
-      completed: false
+      completed: false,
+      requiredDate: new Date()
     };
 
     setShoppingItems([...shoppingItems, item]);
@@ -161,8 +109,16 @@ const ShoppingList = () => {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-2">Shopping Lists</h1>
-        <p className="text-muted-foreground">Smart shopping lists based on your meal plan</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Smart Shopping List</h1>
+            <p className="text-muted-foreground">Auto-generated from your meal plans and updated daily</p>
+          </div>
+          <Button onClick={refreshShoppingList} variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh List
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -340,44 +296,39 @@ const ShoppingList = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-destructive text-destructive-foreground">Today</Badge>
-                  <span className="font-medium">8:15 AM</span>
+              {shoppingSchedule.map((schedule, index) => (
+                <div key={index} className="border rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className={getUrgencyColor(schedule.urgency)}>
+                      {new Date(schedule.date).toLocaleDateString('en-US', { 
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </Badge>
+                    <span className="font-medium">{schedule.time}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {schedule.description}
+                  </p>
+                  <ul className="text-xs space-y-1">
+                    {schedule.items.slice(0, 3).map((item, i) => (
+                      <li key={i}>• {item}</li>
+                    ))}
+                    {schedule.items.length > 3 && (
+                      <li className="text-muted-foreground">• +{schedule.items.length - 3} more items</li>
+                    )}
+                  </ul>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Quick stop after gym for daily protein needs
-                </p>
-                <ul className="text-xs mt-2 space-y-1">
-                  <li>• Chicken breast (200g)</li>
-                  <li>• Eggs (5 pieces)</li>
-                </ul>
-              </div>
-
-              <div className="border rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-warning text-warning-foreground">Tuesday</Badge>
-                  <span className="font-medium">6:00 PM</span>
+              ))}
+              
+              {shoppingSchedule.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No shopping trips needed right now!</p>
+                  <p className="text-sm">Your pantry looks well-stocked.</p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Weekly grocery shopping for fresh items
-                </p>
-                <ul className="text-xs mt-2 space-y-1">
-                  <li>• Greek yogurt</li>
-                  <li>• Spinach</li>
-                  <li>• Tomatoes</li>
-                </ul>
-              </div>
-
-              <div className="border rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-success text-success-foreground">Weekend</Badge>
-                  <span className="font-medium">Bulk shopping</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Stock up on dry goods and nuts
-                </p>
-              </div>
+              )}
             </CardContent>
           </Card>
 
