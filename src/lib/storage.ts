@@ -1,13 +1,24 @@
 export interface StorageData {
-  tasks: Record<string, boolean>; // taskId -> completed status
+  tasks: Record<string, boolean>; // "taskId-YYYY-MM-DD" -> completed status
   lastUpdated: string;
 }
 
 const STORAGE_KEY = 'daily-diet-doer-data';
 
-export const saveTaskProgress = (taskId: string, completed: boolean) => {
+// Helper function to format date as YYYY-MM-DD
+const formatDate = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
+// Helper function to create storage key
+const createTaskKey = (taskId: string, date: Date): string => {
+  return `${taskId}-${formatDate(date)}`;
+};
+
+export const saveTaskProgress = (taskId: string, completed: boolean, date: Date = new Date()) => {
   const existingData = getStorageData();
-  existingData.tasks[taskId] = completed;
+  const taskKey = createTaskKey(taskId, date);
+  existingData.tasks[taskKey] = completed;
   existingData.lastUpdated = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(existingData));
 };
@@ -28,9 +39,10 @@ export const getStorageData = (): StorageData => {
   };
 };
 
-export const getTaskCompletion = (taskId: string): boolean => {
+export const getTaskCompletion = (taskId: string, date: Date = new Date()): boolean => {
   const data = getStorageData();
-  return data.tasks[taskId] || false;
+  const taskKey = createTaskKey(taskId, date);
+  return data.tasks[taskKey] || false;
 };
 
 export const clearStorageData = (daysToKeep?: number) => {
@@ -44,12 +56,29 @@ export const clearStorageData = (daysToKeep?: number) => {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
   
-  // For now, we'll just clear all if older than cutoff
-  // In a more sophisticated implementation, we'd track task dates
-  const lastUpdated = new Date(data.lastUpdated);
-  if (lastUpdated < cutoffDate) {
-    localStorage.removeItem(STORAGE_KEY);
-  }
+  // Filter out tasks older than cutoff date
+  const filteredTasks: Record<string, boolean> = {};
+  
+  Object.keys(data.tasks).forEach(taskKey => {
+    // Extract date from taskKey (format: "taskId-YYYY-MM-DD")
+    const datePart = taskKey.split('-').slice(-3).join('-'); // Get last 3 parts as date
+    try {
+      const taskDate = new Date(datePart);
+      if (taskDate >= cutoffDate) {
+        filteredTasks[taskKey] = data.tasks[taskKey];
+      }
+    } catch (error) {
+      // Keep tasks with invalid date format for backward compatibility
+      filteredTasks[taskKey] = data.tasks[taskKey];
+    }
+  });
+
+  const updatedData: StorageData = {
+    tasks: filteredTasks,
+    lastUpdated: new Date().toISOString()
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
 };
 
 export const getStorageStats = () => {
@@ -62,4 +91,26 @@ export const getStorageStats = () => {
     completedTasks,
     lastUpdated: data.lastUpdated
   };
+};
+
+// Helper function to get task completion for a specific date
+export const getTaskCompletionForDate = (taskId: string, date: Date): boolean => {
+  return getTaskCompletion(taskId, date);
+};
+
+// Helper function to get all completed tasks for a specific date
+export const getCompletedTasksForDate = (date: Date): string[] => {
+  const data = getStorageData();
+  const dateStr = formatDate(date);
+  const completedTasks: string[] = [];
+  
+  Object.keys(data.tasks).forEach(taskKey => {
+    if (taskKey.endsWith(`-${dateStr}`) && data.tasks[taskKey]) {
+      // Extract taskId by removing the date suffix
+      const taskId = taskKey.replace(`-${dateStr}`, '');
+      completedTasks.push(taskId);
+    }
+  });
+  
+  return completedTasks;
 };

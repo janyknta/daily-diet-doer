@@ -18,28 +18,28 @@ const CalendarView = () => {
     completed: (date: Date) => {
       const dayOfWeek = getDayOfWeek(date);
       const tasks = getTasksForDay(dayOfWeek);
-      const completedTasks = tasks.filter(task => getTaskCompletion(task.id)).length;
+      const completedTasks = tasks.filter(task => getTaskCompletion(task.id, date)).length;
       const percentage = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
       return percentage === 100;
     },
     mostlyCompleted: (date: Date) => {
       const dayOfWeek = getDayOfWeek(date);
       const tasks = getTasksForDay(dayOfWeek);
-      const completedTasks = tasks.filter(task => getTaskCompletion(task.id)).length;
+      const completedTasks = tasks.filter(task => getTaskCompletion(task.id, date)).length;
       const percentage = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
       return percentage >= 80 && percentage < 100;
     },
     partiallyCompleted: (date: Date) => {
       const dayOfWeek = getDayOfWeek(date);
       const tasks = getTasksForDay(dayOfWeek);
-      const completedTasks = tasks.filter(task => getTaskCompletion(task.id)).length;
+      const completedTasks = tasks.filter(task => getTaskCompletion(task.id, date)).length;
       const percentage = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
       return percentage > 0 && percentage < 80;
     },
     notStarted: (date: Date) => {
       const dayOfWeek = getDayOfWeek(date);
       const tasks = getTasksForDay(dayOfWeek);
-      const completedTasks = tasks.filter(task => getTaskCompletion(task.id)).length;
+      const completedTasks = tasks.filter(task => getTaskCompletion(task.id, date)).length;
       const percentage = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
       return percentage === 0;
     }
@@ -54,8 +54,10 @@ const CalendarView = () => {
 
   const selectedDayOfWeek = selectedDate ? getDayOfWeek(selectedDate) : 0;
   const selectedDayTasks = getTasksForDay(selectedDayOfWeek);
-  const completedTasksCount = selectedDayTasks.filter(task => getTaskCompletion(task.id)).length;
-  const completionPercentage = selectedDayTasks.length > 0 ? Math.round((completedTasksCount / selectedDayTasks.length) * 100) : 0;
+  const completedTasksCount = selectedDate ? 
+    selectedDayTasks.filter(task => getTaskCompletion(task.id, selectedDate)).length : 0;
+  const completionPercentage = selectedDayTasks.length > 0 ? 
+    Math.round((completedTasksCount / selectedDayTasks.length) * 100) : 0;
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
@@ -173,7 +175,8 @@ const CalendarView = () => {
               <div className="space-y-2">
                 {['meal', 'work', 'exercise', 'learning', 'chore', 'prep', 'shopping', 'personal'].map(type => {
                   const typeTasks = selectedDayTasks.filter(task => task.type === type);
-                  const completed = typeTasks.filter(task => getTaskCompletion(task.id)).length;
+                  const completed = selectedDate ? 
+                    typeTasks.filter(task => getTaskCompletion(task.id, selectedDate)).length : 0;
                   
                   if (typeTasks.length === 0) return null;
                   

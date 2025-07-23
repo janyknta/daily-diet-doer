@@ -1,3 +1,5 @@
+import { getTaskCompletion } from './storage';
+
 export interface Task {
   id: string;
   time: string;
@@ -606,13 +608,11 @@ export const getMealsForDay = (day: number): Meal[] => {
   return weeklyMeals.filter(meal => meal.day === day);
 };
 
-export const getTaskCompletionPercentage = (day: number): number => {
+// Updated to accept a specific date
+export const getTaskCompletionPercentage = (day: number, date: Date = new Date()): number => {
   const tasksForDay = getTasksForDay(day);
   if (tasksForDay.length === 0) return 0;
-  
-  // Import storage functions
-  const { getTaskCompletion } = require('./storage');
-  const completedTasks = tasksForDay.filter(task => getTaskCompletion(task.id)).length;
+  const completedTasks = tasksForDay.filter(task => getTaskCompletion(task.id, date)).length;
   return Math.round((completedTasks / tasksForDay.length) * 100);
 };
 
