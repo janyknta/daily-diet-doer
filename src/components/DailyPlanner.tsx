@@ -1,126 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle, ShoppingCart, Bell, Utensils } from "lucide-react";
-
-interface Task {
-  id: string;
-  time: string;
-  title: string;
-  description: string;
-  type: 'meal' | 'work' | 'prep' | 'shopping' | 'exercise' | 'personal';
-  completed: boolean;
-  reminder?: boolean;
-}
-
-interface Meal {
-  time: string;
-  name: string;
-  foods: string[];
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-}
+import { Clock, CheckCircle, ShoppingCart, Bell, Utensils, RefreshCw } from "lucide-react";
+import { 
+  Task, 
+  Meal, 
+  weeklyTasks, 
+  weeklyMeals, 
+  getCurrentDate, 
+  getTasksForDay, 
+  getMealsForDay, 
+  getDayName,
+  getTaskCompletionPercentage 
+} from "@/lib/plannerData";
 
 const DailyPlanner = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      time: '5:00',
-      title: 'Wake Up',
-      description: 'Start the day fresh',
-      type: 'personal',
-      completed: false,
-      reminder: true
-    },
-    {
-      id: '2',
-      time: '5:15',
-      title: 'Deep Learning Session',
-      description: 'No distraction focused learning (90 min)',
-      type: 'work',
-      completed: false,
-      reminder: true
-    },
-    {
-      id: '3',
-      time: '6:00',
-      title: 'Morning Soaked Combo',
-      description: '2 Kimia dates + 6 almonds + 2 walnuts + 1 Brazil nut + 8 black raisins + 1 tsp chia + 1 banana',
-      type: 'meal',
-      completed: false,
-      reminder: true
-    },
-    {
-      id: '4',
-      time: '7:00',
-      title: 'Gym Session',
-      description: 'Workout (75 min)',
-      type: 'exercise',
-      completed: false,
-      reminder: true
-    },
-    {
-      id: '5',
-      time: '8:15',
-      title: 'Shopping & Return',
-      description: 'Buy chicken (200g), eggs (5), return from gym',
-      type: 'shopping',
-      completed: false,
-      reminder: true
-    },
-    {
-      id: '6',
-      time: '8:40',
-      title: 'Breakfast Prep',
-      description: 'Boil eggs, prepare breakfast, lunch prep, shower',
-      type: 'prep',
-      completed: false,
-      reminder: true
-    },
-    {
-      id: '7',
-      time: '7:30',
-      title: 'Post-Workout Breakfast',
-      description: 'Sattu shake + 3 boiled eggs + Greek yogurt',
-      type: 'meal',
-      completed: false,
-      reminder: true
-    }
-  ]);
+  const [currentDate, setCurrentDate] = useState(getCurrentDate());
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [todaysMeals, setTodaysMeals] = useState<Meal[]>([]);
 
-  const todaysMeals: Meal[] = [
-    {
-      time: '6:00 AM',
-      name: 'Morning Soaked Combo',
-      foods: ['2 Kimia dates', '6 almonds', '2 walnuts', '1 Brazil nut', '8 black raisins', '1 tsp chia', '1 banana'],
-      calories: 320,
-      protein: 6,
-      carbs: 45,
-      fats: 14
-    },
-    {
-      time: '7:30 AM',
-      name: 'Post-Workout Breakfast',
-      foods: ['Sattu shake (250ml milk + 25g sattu + jaggery + cinnamon)', '3 boiled eggs', 'Greek yogurt (200g)'],
-      calories: 850,
-      protein: 50,
-      carbs: 75,
-      fats: 32
-    },
-    {
-      time: '11:00 AM',
-      name: 'Mid-Morning Snack',
-      foods: ['Chia pudding (milk 150ml + chia 2 tsp)', '2 soaked figs', 'pomegranate 50g'],
-      calories: 220,
-      protein: 6,
-      carbs: 30,
-      fats: 8
-    }
-  ];
+  const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+  // Load tasks and meals for current day
+  useEffect(() => {
+    const dayTasks = getTasksForDay(currentDay);
+    const dayMeals = getMealsForDay(currentDay);
+    
+    setTasks(dayTasks);
+    setTodaysMeals(dayMeals);
+  }, [currentDay]);
+
+  const refreshDate = () => {
+    const newDate = getCurrentDate();
+    setCurrentDate(newDate);
+  };
 
   const toggleTask = (taskId: string) => {
     setTasks(tasks.map(task => 
@@ -135,7 +49,9 @@ const DailyPlanner = () => {
       prep: 'bg-warning text-warning-foreground',
       shopping: 'bg-success text-success-foreground',
       exercise: 'bg-destructive text-destructive-foreground',
-      personal: 'bg-secondary text-secondary-foreground'
+      personal: 'bg-secondary text-secondary-foreground',
+      chore: 'bg-muted text-muted-foreground',
+      learning: 'bg-primary text-primary-foreground'
     };
     return colors[type as keyof typeof colors] || 'bg-muted text-muted-foreground';
   };
@@ -147,16 +63,49 @@ const DailyPlanner = () => {
       prep: <Bell className="h-4 w-4" />,
       shopping: <ShoppingCart className="h-4 w-4" />,
       exercise: <CheckCircle className="h-4 w-4" />,
-      personal: <Bell className="h-4 w-4" />
+      personal: <Bell className="h-4 w-4" />,
+      chore: <Bell className="h-4 w-4" />,
+      learning: <Clock className="h-4 w-4" />
     };
     return icons[type as keyof typeof icons];
   };
 
+  const completionPercentage = getTaskCompletionPercentage(currentDay);
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-2">Daily Planner</h1>
-        <p className="text-muted-foreground">Your personalized meal and activity schedule</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Daily Planner</h1>
+            <p className="text-muted-foreground">
+              {getDayName(currentDay)} - {currentDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </p>
+          </div>
+          <div className="text-right">
+            <Button 
+              variant="outline" 
+              onClick={refreshDate}
+              className="mb-2"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Date
+            </Button>
+            <div className="text-lg font-semibold">
+              Progress: {completionPercentage}%
+            </div>
+            <div className="w-32 bg-muted rounded-full h-2 mt-2">
+              <div 
+                className="h-2 rounded-full bg-success transition-all duration-300"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -164,9 +113,14 @@ const DailyPlanner = () => {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                Today's Schedule
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  {getDayName(currentDay)}'s Schedule
+                </div>
+                <Badge variant="outline" className="text-sm">
+                  {tasks.length} tasks
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -218,9 +172,14 @@ const DailyPlanner = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Utensils className="h-5 w-5 text-primary" />
-                Today's Meals
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Utensils className="h-5 w-5 text-primary" />
+                  {getDayName(currentDay)}'s Meals
+                </div>
+                <Badge variant="outline" className="text-sm">
+                  {todaysMeals.length} meals
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

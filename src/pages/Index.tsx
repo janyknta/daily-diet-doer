@@ -2,6 +2,8 @@ import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import DailyPlanner from "@/components/DailyPlanner";
 import ShoppingList from "@/components/ShoppingList";
+import CalendarView from "@/components/CalendarView";
+import SettingsView from "@/components/SettingsView";
 
 const Index = () => {
   const [activeView, setActiveView] = useState('planner');
@@ -13,12 +15,7 @@ const Index = () => {
       case 'shopping':
         return <ShoppingList />;
       case 'calendar':
-        return (
-          <div className="container mx-auto p-6 max-w-4xl">
-            <h1 className="text-4xl font-bold text-foreground mb-2">Calendar View</h1>
-            <p className="text-muted-foreground">Coming soon - Weekly and monthly calendar views</p>
-          </div>
-        );
+        return <CalendarView />;
       case 'reminders':
         return (
           <div className="container mx-auto p-6 max-w-4xl">
@@ -27,12 +24,7 @@ const Index = () => {
           </div>
         );
       case 'settings':
-        return (
-          <div className="container mx-auto p-6 max-w-4xl">
-            <h1 className="text-4xl font-bold text-foreground mb-2">Settings</h1>
-            <p className="text-muted-foreground">Coming soon - Customize your meal plans and preferences</p>
-          </div>
-        );
+        return <SettingsView />;
       default:
         return <DailyPlanner />;
     }
